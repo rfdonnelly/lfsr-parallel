@@ -1,0 +1,62 @@
+#!/usr/bin/env ruby
+
+# TODO: Make a library
+# TODO: Add CLI
+
+def print_state(state_bits)
+  state_bits.each_with_index do |state_bit, state_bit_idx|
+    puts 's[%d] = %s' % [state_bit_idx, state_bit.join(' ^ ')]
+  end
+end
+
+def reduce(state_bits)
+  state_bits.map do |terms|
+    reduced_terms = []
+
+    uniq_terms = terms.sort.uniq
+    uniq_terms.each do |term|
+      term_count = terms.count(term)
+      if term_count % 2 == 1
+        reduced_terms.push(term)
+      end
+    end
+
+    reduced_terms
+  end
+end
+
+def polynomial_to_bits(state_size, polynomial)
+  (0..state_size).map do |i|
+    mask = 1 << i
+    (polynomial & mask) > 0
+  end
+end
+
+has_variable_initial_state = false
+data_size = 8 - 1
+state_size = 8 - 1
+polynomial_bits = polynomial_to_bits(state_size, 0x07)
+
+state_bits =
+  if has_variable_initial_state
+    (0..state_size).map { |i| ['is[%d]' % i] }
+  else
+    (0..state_size).map { [] }
+  end
+
+(0..data_size).reverse_each do |data_bit_idx|
+  state_msb = state_bits[3]
+  data_bit = 'd[%d]' % data_bit_idx
+  feedback = state_bits[3].clone.push(data_bit)
+
+  (1..state_size).reverse_each do |state_bit_idx|
+    state_bits[state_bit_idx] = state_bits[state_bit_idx - 1]
+
+    if polynomial_bits[state_bit_idx]
+        state_bits[state_bit_idx].concat(feedback)
+    end
+  end
+  state_bits[0] = feedback
+end
+
+print_state(reduce(state_bits))
