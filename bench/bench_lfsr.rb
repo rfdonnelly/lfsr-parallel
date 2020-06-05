@@ -1,14 +1,15 @@
 require_relative '../lib/lfsr'
 
 require 'benchmark'
+include Benchmark
 
-time = Benchmark.bmbm do |x|
+Benchmark.benchmark(CAPTION, 8, FORMAT, '>total') do |x|
   state = []
   
-  x.report("unroll") do
+  t_unroll = x.report("unroll") do
     state = unroll_lfsr(data_size: 32, state_size: 8, polynomial: 0x07)
   end
-  x.report("reduce") { reduce(state) }
-end
+  t_reduce = x.report("reduce") { reduce(state) }
 
-puts time
+  [t_unroll + t_reduce]
+end
