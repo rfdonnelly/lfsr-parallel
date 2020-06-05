@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+
+require_relative '../lib/lfsr'
+
+state = unroll_lfsr(data_size: 32, state_size: 8, polynomial: 0x07)
+state = reduce(state)
+puts state_to_s(state)
