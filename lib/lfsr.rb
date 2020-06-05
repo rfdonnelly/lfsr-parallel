@@ -1,7 +1,7 @@
 INITIAL_STATE_OFFSET = 1 << 31
 
 def polynomial_to_bits(state_size, polynomial)
-  (0..state_size).map do |i|
+  (0...state_size).map do |i|
     mask = 1 << i
     (polynomial & mask) > 0
   end
@@ -39,23 +39,21 @@ def state_to_s(state_bits)
 end
 
 def unroll_lfsr(data_size:, state_size:, polynomial:, has_variable_initial_state: false)
-  data_size -= 1
-  state_size -= 1
   polynomial_bits = polynomial_to_bits(state_size, polynomial)
 
   state_bits =
     if has_variable_initial_state
-      (0..state_size).map { |i| [i + INITIAL_STATE_OFFSET] }
+      (0...state_size).map { |i| [i + INITIAL_STATE_OFFSET] }
     else
-      (0..state_size).map { [] }
+      (0...state_size).map { [] }
     end
 
-  (0..data_size).reverse_each do |data_bit_idx|
+  (0...data_size).reverse_each do |data_bit_idx|
     state_msb = state_bits[3]
     data_bit = data_bit_idx
     feedback = state_msb.clone.push(data_bit)
 
-    (1..state_size).reverse_each do |state_bit_idx|
+    (1...state_size).reverse_each do |state_bit_idx|
       state_bits[state_bit_idx] = state_bits[state_bit_idx - 1]
 
       if polynomial_bits[state_bit_idx]
