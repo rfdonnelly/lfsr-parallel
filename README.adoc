@@ -1,0 +1,39 @@
+# Parallel LFSR
+
+This project generates parallel Galois LFSR implementations for calculating polynomial codes (e.g. CRC) in hardware.
+Parallel implementations are derived by unrolling the serial LFSR implementation.
+
+## Features
+
+* Any data word size
+* Any code size
+* Optional initial state
+* Term reduction
+
+## Example
+
+Given a 32-bit data word and the following generator polynomial:
+
+[listing]
+----
+g(x) = x^8 + x^2 + x^1 + x
+----
+
+The following parallel implementation is generated:
+
+[listing]
+----
+c[0] = d[0] ^ d[10] ^ d[14] ^ d[16] ^ d[17] ^ d[21] ^ d[23] ^ d[24] ^ d[28] ^ d[2] ^ d[30] ^ d[31] ^ d[3] ^ d[7] ^ d[9]
+c[1] = d[0] ^ d[11] ^ d[14] ^ d[15] ^ d[16] ^ d[18] ^ d[1] ^ d[21] ^ d[22] ^ d[23] ^ d[25] ^ d[28] ^ d[29] ^ d[2] ^ d[30] ^ d[4] ^ d[7] ^ d[8] ^ d[9]
+c[2] = d[0] ^ d[12] ^ d[14] ^ d[15] ^ d[19] ^ d[1] ^ d[21] ^ d[22] ^ d[26] ^ d[28] ^ d[29] ^ d[5] ^ d[7] ^ d[8]
+c[3] = d[13] ^ d[15] ^ d[16] ^ d[1] ^ d[20] ^ d[22] ^ d[23] ^ d[27] ^ d[29] ^ d[2] ^ d[30] ^ d[6] ^ d[8] ^ d[9]
+c[4] = d[10] ^ d[14] ^ d[16] ^ d[17] ^ d[21] ^ d[23] ^ d[24] ^ d[28] ^ d[2] ^ d[30] ^ d[31] ^ d[3] ^ d[7] ^ d[9]
+c[5] = d[10] ^ d[11] ^ d[15] ^ d[17] ^ d[18] ^ d[22] ^ d[24] ^ d[25] ^ d[29] ^ d[31] ^ d[3] ^ d[4] ^ d[8]
+c[6] = d[11] ^ d[12] ^ d[16] ^ d[18] ^ d[19] ^ d[23] ^ d[25] ^ d[26] ^ d[30] ^ d[4] ^ d[5] ^ d[9]
+c[7] = d[10] ^ d[12] ^ d[13] ^ d[17] ^ d[19] ^ d[20] ^ d[24] ^ d[26] ^ d[27] ^ d[31] ^ d[5] ^ d[6]
+----
+
+## Possible Future Work
+
+* Sort terms
+* Pipelining
