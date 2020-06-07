@@ -2,6 +2,42 @@
 
 require_relative '../lib/lfsr'
 
-state = unroll_lfsr(data_size: 32, state_size: 8, polynomial: 0x07)
+require 'optparse'
+
+Options = Struct.new(
+  :data_size,
+  :state_size,
+  :polynomial,
+  :initial_state
+)
+
+options = Options.new
+options.initial_state = false
+
+OptionParser.new do |op|
+  op.on('-d', '--data-size=DATA_SIZE', 'Width of data word') do |arg|
+    options.data_size = Integer(arg)
+  end
+  op.on('-s', '--state-size=STATE_SIZE', 'Width of the checksum') do |arg|
+    options.state_size = Integer(arg)
+  end
+  op.on('-p', '--polynomial=POLYNOMIAL', 'The normal representation of the polynomial') do |arg|
+    options.polynomial = Integer(arg)
+  end
+  op.on('--[no-]variable-initial-state', 'Include initial state variable in final equations') do |arg|
+    options.initial_state = arg
+  end
+end.parse!
+
+raise '--data-size option required' if options.data_size.nil?
+raise '--state-size option required' if options.state_size.nil?
+raise '--polynomial option required' if options.polynomial.nil?
+
+state = unroll_lfsr(
+  data_size: options.data_size,
+  state_size: options.state_size,
+  polynomial: options.polynomial,
+  has_variable_initial_state: options.initial_state
+)
 state = reduce(state)
 puts state_to_s(state)
