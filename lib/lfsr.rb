@@ -49,7 +49,7 @@ def unroll_lfsr(data_size:, state_size:, polynomial:, has_variable_initial_state
     end
 
   (0...data_size).reverse_each do |data_bit_idx|
-    state_msb = state_bits[3]
+    state_msb = state_bits.last
     data_bit = data_bit_idx
     feedback = state_msb.clone.push(data_bit)
 

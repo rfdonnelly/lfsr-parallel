@@ -6,14 +6,14 @@ class TestLFSR < Minitest::Test
     state = reduce(state)
     actual = state_to_s(state)
     expected = <<~EOF.strip
-      c[0] = d[0] ^ d[2] ^ d[3] ^ d[7]
-      c[1] = d[0] ^ d[1] ^ d[2] ^ d[4] ^ d[7]
-      c[2] = d[0] ^ d[1] ^ d[5] ^ d[7]
-      c[3] = d[1] ^ d[2] ^ d[6]
-      c[4] = d[2] ^ d[3] ^ d[7]
-      c[5] = d[3] ^ d[4]
-      c[6] = d[4] ^ d[5]
-      c[7] = d[5] ^ d[6]
+      c[0] = d[0] ^ d[6] ^ d[7]
+      c[1] = d[0] ^ d[1] ^ d[6]
+      c[2] = d[0] ^ d[1] ^ d[2] ^ d[6]
+      c[3] = d[1] ^ d[2] ^ d[3] ^ d[7]
+      c[4] = d[2] ^ d[3] ^ d[4]
+      c[5] = d[3] ^ d[4] ^ d[5]
+      c[6] = d[4] ^ d[5] ^ d[6]
+      c[7] = d[5] ^ d[6] ^ d[7]
     EOF
     assert_equal expected, actual
   end
