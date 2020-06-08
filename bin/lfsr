@@ -39,5 +39,4 @@ state = unroll_lfsr(
   polynomial: options.polynomial,
   has_variable_initial_state: options.initial_state
 )
-state = reduce(state)
 puts state_to_s(state)

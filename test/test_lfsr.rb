@@ -3,7 +3,6 @@ require 'test_helper'
 class TestLFSR < Minitest::Test
   def test_lfsr
     state = unroll_lfsr(data_size: 8, state_size: 8, polynomial: 0x07)
-    state = reduce(state)
     actual = state_to_s(state)
     expected = <<~EOF.strip
       c[0] = d[0] ^ d[6] ^ d[7]
