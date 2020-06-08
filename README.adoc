@@ -19,7 +19,21 @@ Given a 32-bit data word and the following generator polynomial:
 g(x) = x^8 + x^2 + x^1 + x
 ----
 
-The following parallel implementation is generated:
+With a normal representation of:
+
+[listing]
+----
+0x07
+----
+
+Running:
+
+[source,sh]
+----
+lfsr --data-size 32 --state-size 8 --polynomial 0x07
+----
+
+Will generate the following parallel implementation:
 
 [listing]
 ----
