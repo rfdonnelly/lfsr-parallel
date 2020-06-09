@@ -1,6 +1,8 @@
 use std::fmt;
 use std::collections::HashSet;
 
+use bitvec::prelude::*;
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 enum Variable {
     InitialState,
@@ -83,16 +85,6 @@ impl Terms {
     }
 }
 
-fn u64_to_vecbool(
-    state_size: usize,
-    polynomial: u64,
-) -> Vec<bool> {
-    (0..state_size).map(|i| {
-        let mask = 1 << i;
-        (polynomial & mask) > 0
-    }).collect()
-}
-
 fn unroll_lfsr(
     data_size: usize,
     state_size: usize,
@@ -100,7 +92,12 @@ fn unroll_lfsr(
 ) -> Vec<Terms> {
     let mut state = vec![Terms::new(); state_size];
 
-    let polynomial = u64_to_vecbool(state_size, polynomial);
+    // Convert 64 bit polynomial to a BitVec for ease of indexing
+    let polynomial = {
+        let mut polynomial = BitVec::<Lsb0, u64>::from_element(polynomial);
+        polynomial.resize(state_size, false);
+        polynomial
+    };
 
     for data_bit_idx in (0..data_size).rev() {
         state.rotate_right(1);
