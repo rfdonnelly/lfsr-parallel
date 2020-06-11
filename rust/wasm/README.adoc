@@ -1,0 +1,27 @@
+= WASM Target
+
+This directory provides a WASM target than can be loaded in any modern web browser.
+
+== Build
+
+Build the WASM target using `wasm-pack`.
+
+[source,sh]
+----
+wasm-pack build --target web
+----
+
+== Run
+
+Launch a web server in this directory.
+
+[source,sh]
+----
+python3 -m http.server
+----
+
+== View
+
+View the page in a web browser.
+
+http://localhost:8000

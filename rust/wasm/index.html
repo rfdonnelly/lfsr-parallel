@@ -1,0 +1,45 @@
+
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script type="module">
+      import init, { unroll_lfsr } from './pkg/lfsr_wasm.js';
+
+      async function run() {
+        await init();
+        unroll_button_clicked();
+      }
+
+      window.unroll_button_clicked = function unroll_button_clicked() {
+        var data_size = parseInt(document.getElementById("data_size").value);
+        var state_size = parseInt(document.getElementById("state_size").value);
+        var polynomial = BigInt(document.getElementById("polynomial").value);
+        var output = unroll_lfsr(data_size, state_size, polynomial);
+        document.getElementById("output").value = output;
+      }
+
+      run();
+    </script>
+
+    <label for="data_size">Data width:</label>
+    <input type="text" id="data_size" name="data_size" value="32">
+    <br>
+
+    <label for="state_size">State width:</label>
+    <input type="text" id="state_size" name="state_size" value="8">
+    <br>
+
+    <label for="polynomial">Polynomial:</label>
+    <input type="text" id="polynomial" name="polynomial" value="0x07">
+    <br>
+    <br>
+
+    <button id="unroll" onclick="unroll_button_clicked();">Unroll LFSR</button>
+    <br><br>
+
+    <label for"output">Output:</label><br>
+    <textarea id="output" wrap="off" cols="128" rows="16"></textarea>
+  </body>
+</html>

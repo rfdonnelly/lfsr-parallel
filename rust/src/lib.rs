@@ -14,7 +14,7 @@ struct Term {
 }
 
 #[derive(Clone)]
-struct Terms {
+pub struct Terms {
     terms: HashSet<Term>,
 }
 
@@ -93,7 +93,7 @@ fn u64_to_vecbool(
     }).collect()
 }
 
-fn unroll_lfsr(
+pub fn unroll_lfsr(
     data_size: usize,
     state_size: usize,
     polynomial: u64,
@@ -116,7 +116,7 @@ fn unroll_lfsr(
     state
 }
 
-fn state_to_s(state: &[Terms]) -> String {
+pub fn state_to_s(state: &[Terms]) -> String {
     state.iter().enumerate().map(|(i, terms)| {
         let mut terms_strings = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
         terms_strings.sort();
