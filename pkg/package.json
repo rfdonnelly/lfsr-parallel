@@ -1,0 +1,15 @@
+{
+  "name": "lfsr-wasm",
+  "collaborators": [
+    "Rob Donnelly <rfdonnelly@gmail.com>"
+  ],
+  "version": "0.1.0",
+  "files": [
+    "lfsr_wasm_bg.wasm",
+    "lfsr_wasm.js",
+    "lfsr_wasm.d.ts"
+  ],
+  "module": "lfsr_wasm.js",
+  "types": "lfsr_wasm.d.ts",
+  "sideEffects": false
+}
