@@ -1,13 +1,13 @@
 use std::fmt;
 use std::collections::HashSet;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 enum Variable {
     InitialState,
     Data,
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 struct Term {
     variable: Variable,
     index: usize,
@@ -118,9 +118,10 @@ pub fn unroll_lfsr(
 
 pub fn state_to_s(state: &[Terms]) -> String {
     state.iter().enumerate().map(|(i, terms)| {
-        let mut terms_strings = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
-        terms_strings.sort();
-        format!("c[{}] = {}", i, terms_strings.join(" ^ "))
+        let mut terms = terms.iter().collect::<Vec<&Term>>();
+        terms.sort_unstable();
+        let terms = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
+        format!("c[{}] = {}", i, terms.join(" ^ "))
     }).collect::<Vec<String>>().join("\n")
 }
 
@@ -165,6 +166,24 @@ mod tests2 {
             c[5] = d[3] ^ d[4] ^ d[5]
             c[6] = d[4] ^ d[5] ^ d[6]
             c[7] = d[5] ^ d[6] ^ d[7]"
+        );
+        assert_eq!(expected, &actual);
+    }
+
+    #[test]
+    fn test_unroll_large() {
+        let state = unroll_lfsr(56, 8, 0x7);
+        let actual = state_to_s(&state);
+        let expected = indoc!(
+            "
+            c[0] = d[0] ^ d[6] ^ d[7] ^ d[8] ^ d[12] ^ d[14] ^ d[16] ^ d[18] ^ d[19] ^ d[21] ^ d[23] ^ d[28] ^ d[30] ^ d[31] ^ d[34] ^ d[35] ^ d[39] ^ d[40] ^ d[43] ^ d[45] ^ d[48] ^ d[49] ^ d[50] ^ d[52] ^ d[53] ^ d[54]
+            c[1] = d[0] ^ d[1] ^ d[6] ^ d[9] ^ d[12] ^ d[13] ^ d[14] ^ d[15] ^ d[16] ^ d[17] ^ d[18] ^ d[20] ^ d[21] ^ d[22] ^ d[23] ^ d[24] ^ d[28] ^ d[29] ^ d[30] ^ d[32] ^ d[34] ^ d[36] ^ d[39] ^ d[41] ^ d[43] ^ d[44] ^ d[45] ^ d[46] ^ d[48] ^ d[51] ^ d[52] ^ d[55]
+            c[2] = d[0] ^ d[1] ^ d[2] ^ d[6] ^ d[8] ^ d[10] ^ d[12] ^ d[13] ^ d[15] ^ d[17] ^ d[22] ^ d[24] ^ d[25] ^ d[28] ^ d[29] ^ d[33] ^ d[34] ^ d[37] ^ d[39] ^ d[42] ^ d[43] ^ d[44] ^ d[46] ^ d[47] ^ d[48] ^ d[50] ^ d[54]
+            c[3] = d[1] ^ d[2] ^ d[3] ^ d[7] ^ d[9] ^ d[11] ^ d[13] ^ d[14] ^ d[16] ^ d[18] ^ d[23] ^ d[25] ^ d[26] ^ d[29] ^ d[30] ^ d[34] ^ d[35] ^ d[38] ^ d[40] ^ d[43] ^ d[44] ^ d[45] ^ d[47] ^ d[48] ^ d[49] ^ d[51] ^ d[55]
+            c[4] = d[2] ^ d[3] ^ d[4] ^ d[8] ^ d[10] ^ d[12] ^ d[14] ^ d[15] ^ d[17] ^ d[19] ^ d[24] ^ d[26] ^ d[27] ^ d[30] ^ d[31] ^ d[35] ^ d[36] ^ d[39] ^ d[41] ^ d[44] ^ d[45] ^ d[46] ^ d[48] ^ d[49] ^ d[50] ^ d[52]
+            c[5] = d[3] ^ d[4] ^ d[5] ^ d[9] ^ d[11] ^ d[13] ^ d[15] ^ d[16] ^ d[18] ^ d[20] ^ d[25] ^ d[27] ^ d[28] ^ d[31] ^ d[32] ^ d[36] ^ d[37] ^ d[40] ^ d[42] ^ d[45] ^ d[46] ^ d[47] ^ d[49] ^ d[50] ^ d[51] ^ d[53]
+            c[6] = d[4] ^ d[5] ^ d[6] ^ d[10] ^ d[12] ^ d[14] ^ d[16] ^ d[17] ^ d[19] ^ d[21] ^ d[26] ^ d[28] ^ d[29] ^ d[32] ^ d[33] ^ d[37] ^ d[38] ^ d[41] ^ d[43] ^ d[46] ^ d[47] ^ d[48] ^ d[50] ^ d[51] ^ d[52] ^ d[54]
+            c[7] = d[5] ^ d[6] ^ d[7] ^ d[11] ^ d[13] ^ d[15] ^ d[17] ^ d[18] ^ d[20] ^ d[22] ^ d[27] ^ d[29] ^ d[30] ^ d[33] ^ d[34] ^ d[38] ^ d[39] ^ d[42] ^ d[44] ^ d[47] ^ d[48] ^ d[49] ^ d[51] ^ d[52] ^ d[53] ^ d[55]"
         );
         assert_eq!(expected, &actual);
     }
