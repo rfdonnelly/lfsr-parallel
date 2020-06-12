@@ -10,15 +10,30 @@
 
       async function run() {
         await init();
+        form_from_query();
         generate_button_clicked();
       }
 
+      function form_from_query() {
+        var params = new URLSearchParams(location.search.slice(1));
+        if (params.has("data-width")) {
+          document.getElementById("data_width").value = params.get("data-width");
+        }
+        if (params.has("code-width")) {
+          document.getElementById("code_width").value = params.get("code-width");
+        }
+        if (params.has("polynomial")) {
+          document.getElementById("polynomial").value = params.get("polynomial");
+        }
+      }
+
       window.generate_button_clicked = function generate_button_clicked() {
-        var data_size = parseInt(document.getElementById("data_size").value);
-        var state_size = parseInt(document.getElementById("state_size").value);
-        var polynomial = BigInt(document.getElementById("polynomial").value);
-        var output = unroll_lfsr(data_size, state_size, polynomial);
-        document.getElementById("output").value = output;
+        var data_width = document.getElementById("data_width").value;
+        var code_width = document.getElementById("code_width").value;
+        var polynomial = document.getElementById("polynomial").value;
+        window.history.replaceState({}, '', location.pathname + '?data-width=' + data_width + '&code-width=' + code_width + '&polynomial=' + polynomial);
+        var output = unroll_lfsr(parseInt(data_width), parseInt(code_width), BigInt(polynomial));
+        document.getElementById("output").value = "// Generated with " + location.href + "\n" + output;
       }
 
       run();
@@ -34,17 +49,17 @@
     <p>
       The parallel version is computed by executing the LFSR symbolicly.
       Instead of feeding the LFSR the ones and zeros of a data word, the LFSR is fed the bits of the data word symbolically.
-      For example, for a 8-bit data word, the LFSR is fed the symbols `d[7]`, `d[6]`, ... `d[0]` instead of the actual ones and zeros.
+      For example, for a 8-bit data word, the LFSR is fed the symbols <code>d[7]</code>, <code>d[6]</code>, ..., <code>d[0]</code> instead of the actual ones and zeros.
     </p>
 
     <fieldset>
       <legend>Inputs</legend>
-      <label style="display:inline-block; width:100px;" for="data_size">Data width:</label>
-      <input type="text" id="data_size" name="data_size" value="32">
+      <label style="display:inline-block; width:100px;" for="data_width">Data width:</label>
+      <input type="text" id="data_width" name="data_width" value="32">
       <br>
 
-      <label style="display:inline-block; width:100px;" for="state_size">State width:</label>
-      <input type="text" id="state_size" name="state_size" value="8">
+      <label style="display:inline-block; width:100px;" for="code_width">Code width:</label>
+      <input type="text" id="code_width" name="code_width" value="8">
       <br>
 
       <label style="display:inline-block; width:100px;" for="polynomial">Polynomial:</label>
