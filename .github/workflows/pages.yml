@@ -1,0 +1,42 @@
+name: Pages
+
+on:
+  push:
+    branches: main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install depedencies
+      run: cargo install wasm-pack
+
+    - name: Build WASM
+      working-directory: rust/wasm
+      run: wasm-pack build --target web
+
+    - name: Bundle artifacts
+      run: |
+        mkdir pages
+        cp -R rust/wasm/index.html rust/wasm/pkg pages
+
+    - name: Upload Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: pages
+
+  deploy-github-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy Pages
+      uses: actions/deploy-pages@v4
