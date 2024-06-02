@@ -52,6 +52,12 @@ impl fmt::Display for Term {
 
 impl fmt::Display for Lfsr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(
+            f,
+            "// Parallel implementation of LFSR with polynomial 0x{:0width$x}",
+            self.polynomial,
+            width = self.state_size.div_ceil(4)
+        )?;
         writeln!(f, "module parallel_lfsr(")?;
         writeln!(f, "    // data in")?;
         writeln!(f, "    input  logic [{}:0] d;", self.data_size - 1)?;
@@ -200,6 +206,7 @@ mod tests {
         let actual = lfsr.to_string();
         let expected = indoc!(
             "
+            // Parallel implementation of LFSR with polynomial 0x07
             module parallel_lfsr(
                 // data in
                 input  logic [7:0] d;
@@ -227,6 +234,7 @@ mod tests {
         let lfsr = Lfsr::new(56, 8, 0x7, false);
         let actual = lfsr.to_string();
         let expected = indoc!("
+            // Parallel implementation of LFSR with polynomial 0x07
             module parallel_lfsr(
                 // data in
                 input  logic [55:0] d;
