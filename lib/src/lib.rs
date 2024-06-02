@@ -122,7 +122,12 @@ fn u64_to_vecbool(state_size: usize, polynomial: u64) -> Vec<bool> {
 }
 
 impl Lfsr {
-    pub fn new(data_size: usize, state_size: usize, polynomial: u64, include_initial_state: bool) -> Self {
+    pub fn new(
+        data_size: usize,
+        state_size: usize,
+        polynomial: u64,
+        include_initial_state: bool,
+    ) -> Self {
         let state = unroll_lfsr(data_size, state_size, polynomial, include_initial_state);
 
         Self {
@@ -135,7 +140,12 @@ impl Lfsr {
     }
 }
 
-fn unroll_lfsr(data_size: usize, state_size: usize, polynomial: u64, include_initial_state: bool) -> Vec<Terms> {
+fn unroll_lfsr(
+    data_size: usize,
+    state_size: usize,
+    polynomial: u64,
+    include_initial_state: bool,
+) -> Vec<Terms> {
     let mut state = match include_initial_state {
         true => (0..state_size).map(Terms::with_initial_state).collect(),
         false => vec![Terms::new(); state_size],
