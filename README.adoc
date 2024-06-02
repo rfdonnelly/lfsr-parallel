@@ -3,6 +3,8 @@
 This project generates parallel Galois LFSR implementations for calculating polynomial codes (e.g. CRC) in hardware.
 Parallel implementations are derived by unrolling the serial LFSR implementation.
 
+https://rfdonnelly.github.io/lfsr-parallel[Try me!]
+
 ## Features
 
 * Any data word size
