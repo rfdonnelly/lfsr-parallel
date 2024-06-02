@@ -14,8 +14,15 @@ struct Term {
 }
 
 #[derive(Clone)]
-pub struct Terms {
+struct Terms {
     terms: HashSet<Term>,
+}
+
+pub struct Lfsr {
+    data_size: usize,
+    state_size: usize,
+    polynomial: u64,
+    state: Vec<Terms>,
 }
 
 impl Term {
@@ -39,6 +46,25 @@ impl fmt::Display for Variable {
 impl fmt::Display for Term {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}[{}]", self.variable, self.index)
+    }
+}
+
+impl fmt::Display for Lfsr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        writeln!(f, "module parallel_lfsr(")?;
+        writeln!(f, "    // data in")?;
+        writeln!(f, "    input  logic [{}:0] d;", self.data_size - 1)?;
+        writeln!(f, "    // final state")?;
+        writeln!(f, "    output logic [{}:0] c;", self.state_size - 1)?;
+        writeln!(f, ");")?;
+        for (i, terms) in self.state.iter().enumerate() {
+            let mut terms = terms.iter().collect::<Vec<&Term>>();
+            terms.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
+            let terms = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
+            writeln!(f, "    c[{}] = {};", i, terms.join(" ^ "))?;
+        }
+        writeln!(f, "endmodule")
+
     }
 }
 
@@ -93,7 +119,24 @@ fn u64_to_vecbool(
     }).collect()
 }
 
-pub fn unroll_lfsr(
+impl Lfsr {
+    pub fn new(
+        data_size: usize,
+        state_size: usize,
+        polynomial: u64,
+    ) -> Self {
+        let state = unroll_lfsr(data_size, state_size, polynomial);
+
+        Self {
+            data_size,
+            state_size,
+            polynomial,
+            state,
+        }
+    }
+}
+
+fn unroll_lfsr(
     data_size: usize,
     state_size: usize,
     polynomial: u64,
@@ -116,17 +159,8 @@ pub fn unroll_lfsr(
     state
 }
 
-pub fn state_to_s(state: &[Terms]) -> String {
-    state.iter().enumerate().map(|(i, terms)| {
-        let mut terms = terms.iter().collect::<Vec<&Term>>();
-        terms.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-        let terms = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
-        format!("c[{}] = {}", i, terms.join(" ^ "))
-    }).collect::<Vec<String>>().join("\n")
-}
-
 #[cfg(test)]
-mod tests2 {
+mod tests {
     use super::*;
 
     use indoc::indoc;
@@ -154,37 +188,49 @@ mod tests2 {
 
     #[test]
     fn test_unroll() {
-        let state = unroll_lfsr(8, 8, 0x7);
-        let actual = state_to_s(&state);
-        let expected = indoc!(
-            "
-            c[0] = d[7] ^ d[6] ^ d[0]
-            c[1] = d[6] ^ d[1] ^ d[0]
-            c[2] = d[6] ^ d[2] ^ d[1] ^ d[0]
-            c[3] = d[7] ^ d[3] ^ d[2] ^ d[1]
-            c[4] = d[4] ^ d[3] ^ d[2]
-            c[5] = d[5] ^ d[4] ^ d[3]
-            c[6] = d[6] ^ d[5] ^ d[4]
-            c[7] = d[7] ^ d[6] ^ d[5]"
-        );
+        let lfsr = Lfsr::new(8, 8, 0x7);
+        let actual = lfsr.to_string();
+        let expected = indoc!("
+            module parallel_lfsr(
+                // data in
+                input  logic [7:0] d;
+                // final state
+                output logic [7:0] c;
+            );
+                c[0] = d[7] ^ d[6] ^ d[0];
+                c[1] = d[6] ^ d[1] ^ d[0];
+                c[2] = d[6] ^ d[2] ^ d[1] ^ d[0];
+                c[3] = d[7] ^ d[3] ^ d[2] ^ d[1];
+                c[4] = d[4] ^ d[3] ^ d[2];
+                c[5] = d[5] ^ d[4] ^ d[3];
+                c[6] = d[6] ^ d[5] ^ d[4];
+                c[7] = d[7] ^ d[6] ^ d[5];
+            endmodule
+        ");
         assert_eq!(expected, &actual);
     }
 
     #[test]
     fn test_unroll_large() {
-        let state = unroll_lfsr(56, 8, 0x7);
-        let actual = state_to_s(&state);
-        let expected = indoc!(
-            "
-            c[0] = d[54] ^ d[53] ^ d[52] ^ d[50] ^ d[49] ^ d[48] ^ d[45] ^ d[43] ^ d[40] ^ d[39] ^ d[35] ^ d[34] ^ d[31] ^ d[30] ^ d[28] ^ d[23] ^ d[21] ^ d[19] ^ d[18] ^ d[16] ^ d[14] ^ d[12] ^ d[8] ^ d[7] ^ d[6] ^ d[0]
-            c[1] = d[55] ^ d[52] ^ d[51] ^ d[48] ^ d[46] ^ d[45] ^ d[44] ^ d[43] ^ d[41] ^ d[39] ^ d[36] ^ d[34] ^ d[32] ^ d[30] ^ d[29] ^ d[28] ^ d[24] ^ d[23] ^ d[22] ^ d[21] ^ d[20] ^ d[18] ^ d[17] ^ d[16] ^ d[15] ^ d[14] ^ d[13] ^ d[12] ^ d[9] ^ d[6] ^ d[1] ^ d[0]
-            c[2] = d[54] ^ d[50] ^ d[48] ^ d[47] ^ d[46] ^ d[44] ^ d[43] ^ d[42] ^ d[39] ^ d[37] ^ d[34] ^ d[33] ^ d[29] ^ d[28] ^ d[25] ^ d[24] ^ d[22] ^ d[17] ^ d[15] ^ d[13] ^ d[12] ^ d[10] ^ d[8] ^ d[6] ^ d[2] ^ d[1] ^ d[0]
-            c[3] = d[55] ^ d[51] ^ d[49] ^ d[48] ^ d[47] ^ d[45] ^ d[44] ^ d[43] ^ d[40] ^ d[38] ^ d[35] ^ d[34] ^ d[30] ^ d[29] ^ d[26] ^ d[25] ^ d[23] ^ d[18] ^ d[16] ^ d[14] ^ d[13] ^ d[11] ^ d[9] ^ d[7] ^ d[3] ^ d[2] ^ d[1]
-            c[4] = d[52] ^ d[50] ^ d[49] ^ d[48] ^ d[46] ^ d[45] ^ d[44] ^ d[41] ^ d[39] ^ d[36] ^ d[35] ^ d[31] ^ d[30] ^ d[27] ^ d[26] ^ d[24] ^ d[19] ^ d[17] ^ d[15] ^ d[14] ^ d[12] ^ d[10] ^ d[8] ^ d[4] ^ d[3] ^ d[2]
-            c[5] = d[53] ^ d[51] ^ d[50] ^ d[49] ^ d[47] ^ d[46] ^ d[45] ^ d[42] ^ d[40] ^ d[37] ^ d[36] ^ d[32] ^ d[31] ^ d[28] ^ d[27] ^ d[25] ^ d[20] ^ d[18] ^ d[16] ^ d[15] ^ d[13] ^ d[11] ^ d[9] ^ d[5] ^ d[4] ^ d[3]
-            c[6] = d[54] ^ d[52] ^ d[51] ^ d[50] ^ d[48] ^ d[47] ^ d[46] ^ d[43] ^ d[41] ^ d[38] ^ d[37] ^ d[33] ^ d[32] ^ d[29] ^ d[28] ^ d[26] ^ d[21] ^ d[19] ^ d[17] ^ d[16] ^ d[14] ^ d[12] ^ d[10] ^ d[6] ^ d[5] ^ d[4]
-            c[7] = d[55] ^ d[53] ^ d[52] ^ d[51] ^ d[49] ^ d[48] ^ d[47] ^ d[44] ^ d[42] ^ d[39] ^ d[38] ^ d[34] ^ d[33] ^ d[30] ^ d[29] ^ d[27] ^ d[22] ^ d[20] ^ d[18] ^ d[17] ^ d[15] ^ d[13] ^ d[11] ^ d[7] ^ d[6] ^ d[5]"
-        );
+        let lfsr = Lfsr::new(56, 8, 0x7);
+        let actual = lfsr.to_string();
+        let expected = indoc!("
+            module parallel_lfsr(
+                // data in
+                input  logic [55:0] d;
+                // final state
+                output logic [7:0] c;
+            );
+                c[0] = d[54] ^ d[53] ^ d[52] ^ d[50] ^ d[49] ^ d[48] ^ d[45] ^ d[43] ^ d[40] ^ d[39] ^ d[35] ^ d[34] ^ d[31] ^ d[30] ^ d[28] ^ d[23] ^ d[21] ^ d[19] ^ d[18] ^ d[16] ^ d[14] ^ d[12] ^ d[8] ^ d[7] ^ d[6] ^ d[0];
+                c[1] = d[55] ^ d[52] ^ d[51] ^ d[48] ^ d[46] ^ d[45] ^ d[44] ^ d[43] ^ d[41] ^ d[39] ^ d[36] ^ d[34] ^ d[32] ^ d[30] ^ d[29] ^ d[28] ^ d[24] ^ d[23] ^ d[22] ^ d[21] ^ d[20] ^ d[18] ^ d[17] ^ d[16] ^ d[15] ^ d[14] ^ d[13] ^ d[12] ^ d[9] ^ d[6] ^ d[1] ^ d[0];
+                c[2] = d[54] ^ d[50] ^ d[48] ^ d[47] ^ d[46] ^ d[44] ^ d[43] ^ d[42] ^ d[39] ^ d[37] ^ d[34] ^ d[33] ^ d[29] ^ d[28] ^ d[25] ^ d[24] ^ d[22] ^ d[17] ^ d[15] ^ d[13] ^ d[12] ^ d[10] ^ d[8] ^ d[6] ^ d[2] ^ d[1] ^ d[0];
+                c[3] = d[55] ^ d[51] ^ d[49] ^ d[48] ^ d[47] ^ d[45] ^ d[44] ^ d[43] ^ d[40] ^ d[38] ^ d[35] ^ d[34] ^ d[30] ^ d[29] ^ d[26] ^ d[25] ^ d[23] ^ d[18] ^ d[16] ^ d[14] ^ d[13] ^ d[11] ^ d[9] ^ d[7] ^ d[3] ^ d[2] ^ d[1];
+                c[4] = d[52] ^ d[50] ^ d[49] ^ d[48] ^ d[46] ^ d[45] ^ d[44] ^ d[41] ^ d[39] ^ d[36] ^ d[35] ^ d[31] ^ d[30] ^ d[27] ^ d[26] ^ d[24] ^ d[19] ^ d[17] ^ d[15] ^ d[14] ^ d[12] ^ d[10] ^ d[8] ^ d[4] ^ d[3] ^ d[2];
+                c[5] = d[53] ^ d[51] ^ d[50] ^ d[49] ^ d[47] ^ d[46] ^ d[45] ^ d[42] ^ d[40] ^ d[37] ^ d[36] ^ d[32] ^ d[31] ^ d[28] ^ d[27] ^ d[25] ^ d[20] ^ d[18] ^ d[16] ^ d[15] ^ d[13] ^ d[11] ^ d[9] ^ d[5] ^ d[4] ^ d[3];
+                c[6] = d[54] ^ d[52] ^ d[51] ^ d[50] ^ d[48] ^ d[47] ^ d[46] ^ d[43] ^ d[41] ^ d[38] ^ d[37] ^ d[33] ^ d[32] ^ d[29] ^ d[28] ^ d[26] ^ d[21] ^ d[19] ^ d[17] ^ d[16] ^ d[14] ^ d[12] ^ d[10] ^ d[6] ^ d[5] ^ d[4];
+                c[7] = d[55] ^ d[53] ^ d[52] ^ d[51] ^ d[49] ^ d[48] ^ d[47] ^ d[44] ^ d[42] ^ d[39] ^ d[38] ^ d[34] ^ d[33] ^ d[30] ^ d[29] ^ d[27] ^ d[22] ^ d[20] ^ d[18] ^ d[17] ^ d[15] ^ d[13] ^ d[11] ^ d[7] ^ d[6] ^ d[5];
+            endmodule
+        ");
         assert_eq!(expected, &actual);
     }
 }
