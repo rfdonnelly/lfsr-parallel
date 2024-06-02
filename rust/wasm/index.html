@@ -40,7 +40,9 @@
         var polynomial = document.getElementById("polynomial").value;
         window.history.replaceState({}, '', location.pathname + '?data-width=' + data_width + '&code-width=' + code_width + '&polynomial=' + polynomial);
         var output = unroll_lfsr(parseInt(data_width), parseInt(code_width), BigInt(polynomial));
-        document.getElementById("output").value = "// Generated with " + location.href + "\n" + output;
+        const outputElem = document.getElementById("output");
+        outputElem.value = "// Generated with " + location.href + "\n" + output;
+        outputElem.rows = outputElem.value.split("\n").length;
         document.getElementById("permalink").href = location.href;
       }
 
@@ -77,8 +79,8 @@
         <button id="generate" onclick="generateOutput();">Generate</button>
     </div>
 
-    <div style="border-style: solid; border-width: 1px;">
-      <textarea id="output" wrap="off" cols="128" rows="20"></textarea>
+    <div>
+      <textarea id="output" wrap="off" cols="128" rows="20" style="max-width:100%;"></textarea>
     </div>
 
     <div style="padding-top: 1em; padding-bottom: 1em;">
