@@ -2,10 +2,10 @@
 name = "lfsr"
 version = "0.1.0"
 authors = ["Rob Donnelly <rfdonnelly@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dev-dependencies]
-indoc = "0.3"
-pretty_assertions = "0.6"
+indoc = "2"
+pretty_assertions = "1"
