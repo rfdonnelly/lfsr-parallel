@@ -15,13 +15,13 @@ jobs:
       run: cargo install wasm-pack
 
     - name: Build WASM
-      working-directory: rust/wasm
+      working-directory: wasm
       run: wasm-pack build --target web
 
     - name: Bundle artifacts
       run: |
         mkdir pages
-        cp -R rust/wasm/index.html rust/wasm/pkg pages
+        cp -R wasm/index.html wasm/pkg pages
 
     - name: Upload Pages
       uses: actions/upload-pages-artifact@v3
