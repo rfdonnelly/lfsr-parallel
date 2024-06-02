@@ -8,6 +8,7 @@ Build the WASM target using `wasm-pack`.
 
 [source,sh]
 ----
+cargo install wasm-pack
 wasm-pack build --target web
 ----
 
