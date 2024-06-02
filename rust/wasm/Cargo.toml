@@ -8,5 +8,5 @@ edition = "2018"
 crate-type = ["cdylib"]
 
 [dependencies]
-lfsr = { path = ".." }
+lfsr = { path = "../lib" }
 wasm-bindgen = "0.2.63"
