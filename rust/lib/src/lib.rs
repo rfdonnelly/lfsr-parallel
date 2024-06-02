@@ -1,5 +1,5 @@
-use std::fmt;
 use std::collections::HashSet;
+use std::fmt;
 
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash)]
 enum Variable {
@@ -60,11 +60,13 @@ impl fmt::Display for Lfsr {
         for (i, terms) in self.state.iter().enumerate() {
             let mut terms = terms.iter().collect::<Vec<&Term>>();
             terms.sort_unstable_by(|a, b| b.partial_cmp(a).unwrap());
-            let terms = terms.iter().map(ToString::to_string).collect::<Vec<String>>();
+            let terms = terms
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<String>>();
             writeln!(f, "    c[{}] = {};", i, terms.join(" ^ "))?;
         }
         writeln!(f, "endmodule")
-
     }
 }
 
@@ -78,16 +80,12 @@ impl Terms {
     fn with_initial_state(index: usize) -> Self {
         let mut terms = HashSet::new();
 
-        terms.insert(
-            Term {
-                variable: Variable::InitialState,
-                index,
-            }
-        );
+        terms.insert(Term {
+            variable: Variable::InitialState,
+            index,
+        });
 
-        Self {
-            terms,
-        }
+        Self { terms }
     }
 
     fn add_term(&mut self, term: Term) {
@@ -109,22 +107,17 @@ impl Terms {
     }
 }
 
-fn u64_to_vecbool(
-    state_size: usize,
-    polynomial: u64,
-) -> Vec<bool> {
-    (0..state_size).map(|i| {
-        let mask = 1 << i;
-        (polynomial & mask) > 0
-    }).collect()
+fn u64_to_vecbool(state_size: usize, polynomial: u64) -> Vec<bool> {
+    (0..state_size)
+        .map(|i| {
+            let mask = 1 << i;
+            (polynomial & mask) > 0
+        })
+        .collect()
 }
 
 impl Lfsr {
-    pub fn new(
-        data_size: usize,
-        state_size: usize,
-        polynomial: u64,
-    ) -> Self {
+    pub fn new(data_size: usize, state_size: usize, polynomial: u64) -> Self {
         let state = unroll_lfsr(data_size, state_size, polynomial);
 
         Self {
@@ -136,11 +129,7 @@ impl Lfsr {
     }
 }
 
-fn unroll_lfsr(
-    data_size: usize,
-    state_size: usize,
-    polynomial: u64,
-) -> Vec<Terms> {
+fn unroll_lfsr(data_size: usize, state_size: usize, polynomial: u64) -> Vec<Terms> {
     let mut state = vec![Terms::new(); state_size];
 
     let polynomial = u64_to_vecbool(state_size, polynomial);
@@ -190,7 +179,8 @@ mod tests {
     fn test_unroll() {
         let lfsr = Lfsr::new(8, 8, 0x7);
         let actual = lfsr.to_string();
-        let expected = indoc!("
+        let expected = indoc!(
+            "
             module parallel_lfsr(
                 // data in
                 input  logic [7:0] d;
@@ -206,7 +196,8 @@ mod tests {
                 c[6] = d[6] ^ d[5] ^ d[4];
                 c[7] = d[7] ^ d[6] ^ d[5];
             endmodule
-        ");
+        "
+        );
         assert_eq!(expected, &actual);
     }
 
@@ -234,4 +225,3 @@ mod tests {
         assert_eq!(expected, &actual);
     }
 }
-
