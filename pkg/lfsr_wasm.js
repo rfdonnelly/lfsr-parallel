@@ -30,14 +30,15 @@ function getStringFromWasm0(ptr, len) {
 * @param {number} data_size
 * @param {number} state_size
 * @param {bigint} polynomial
+* @param {boolean} include_initial_state
 * @returns {string}
 */
-export function unroll_lfsr(data_size, state_size, polynomial) {
+export function unroll_lfsr(data_size, state_size, polynomial, include_initial_state) {
     let deferred1_0;
     let deferred1_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        wasm.unroll_lfsr(retptr, data_size, state_size, polynomial);
+        wasm.unroll_lfsr(retptr, data_size, state_size, polynomial, include_initial_state);
         var r0 = getInt32Memory0()[retptr / 4 + 0];
         var r1 = getInt32Memory0()[retptr / 4 + 1];
         deferred1_0 = r0;

@@ -4,15 +4,16 @@
 * @param {number} data_size
 * @param {number} state_size
 * @param {bigint} polynomial
+* @param {boolean} include_initial_state
 * @returns {string}
 */
-export function unroll_lfsr(data_size: number, state_size: number, polynomial: bigint): string;
+export function unroll_lfsr(data_size: number, state_size: number, polynomial: bigint, include_initial_state: boolean): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
-  readonly unroll_lfsr: (a: number, b: number, c: number, d: number) => void;
+  readonly unroll_lfsr: (a: number, b: number, c: number, d: number, e: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
 }
