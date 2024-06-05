@@ -23,6 +23,7 @@ pub struct Lfsr {
     state_size: usize,
     polynomial: u64,
     state: Vec<Terms>,
+    include_initial_state: bool,
 }
 
 impl Term {
@@ -37,7 +38,7 @@ impl Term {
 impl fmt::Display for Variable {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Variable::InitialState => write!(f, "is"),
+            Variable::InitialState => write!(f, "i"),
             Variable::Data => write!(f, "d"),
         }
     }
@@ -54,6 +55,10 @@ impl fmt::Display for Lfsr {
         writeln!(f, "module parallel_lfsr(")?;
         writeln!(f, "    // data in")?;
         writeln!(f, "    input  logic [{}:0] d;", self.data_size - 1)?;
+        if self.include_initial_state {
+            writeln!(f, "    // initial state")?;
+            writeln!(f, "    input  logic [{}:0] i;", self.state_size - 1)?;
+        }
         writeln!(f, "    // final state")?;
         writeln!(f, "    output logic [{}:0] c;", self.state_size - 1)?;
         writeln!(f, ");")?;
@@ -117,20 +122,24 @@ fn u64_to_vecbool(state_size: usize, polynomial: u64) -> Vec<bool> {
 }
 
 impl Lfsr {
-    pub fn new(data_size: usize, state_size: usize, polynomial: u64) -> Self {
-        let state = unroll_lfsr(data_size, state_size, polynomial);
+    pub fn new(data_size: usize, state_size: usize, polynomial: u64, include_initial_state: bool) -> Self {
+        let state = unroll_lfsr(data_size, state_size, polynomial, include_initial_state);
 
         Self {
             data_size,
             state_size,
             polynomial,
             state,
+            include_initial_state,
         }
     }
 }
 
-fn unroll_lfsr(data_size: usize, state_size: usize, polynomial: u64) -> Vec<Terms> {
-    let mut state = vec![Terms::new(); state_size];
+fn unroll_lfsr(data_size: usize, state_size: usize, polynomial: u64, include_initial_state: bool) -> Vec<Terms> {
+    let mut state = match include_initial_state {
+        true => (0..state_size).map(Terms::with_initial_state).collect(),
+        false => vec![Terms::new(); state_size],
+    };
 
     let polynomial = u64_to_vecbool(state_size, polynomial);
 
@@ -177,24 +186,26 @@ mod tests {
 
     #[test]
     fn test_unroll() {
-        let lfsr = Lfsr::new(8, 8, 0x7);
+        let lfsr = Lfsr::new(8, 8, 0x7, true);
         let actual = lfsr.to_string();
         let expected = indoc!(
             "
             module parallel_lfsr(
                 // data in
                 input  logic [7:0] d;
+                // initial state
+                input  logic [7:0] i;
                 // final state
                 output logic [7:0] c;
             );
-                c[0] = d[7] ^ d[6] ^ d[0];
-                c[1] = d[6] ^ d[1] ^ d[0];
-                c[2] = d[6] ^ d[2] ^ d[1] ^ d[0];
-                c[3] = d[7] ^ d[3] ^ d[2] ^ d[1];
-                c[4] = d[4] ^ d[3] ^ d[2];
-                c[5] = d[5] ^ d[4] ^ d[3];
-                c[6] = d[6] ^ d[5] ^ d[4];
-                c[7] = d[7] ^ d[6] ^ d[5];
+                c[0] = d[7] ^ d[6] ^ d[0] ^ i[7] ^ i[6] ^ i[0];
+                c[1] = d[6] ^ d[1] ^ d[0] ^ i[6] ^ i[1] ^ i[0];
+                c[2] = d[6] ^ d[2] ^ d[1] ^ d[0] ^ i[6] ^ i[2] ^ i[1] ^ i[0];
+                c[3] = d[7] ^ d[3] ^ d[2] ^ d[1] ^ i[7] ^ i[3] ^ i[2] ^ i[1];
+                c[4] = d[4] ^ d[3] ^ d[2] ^ i[4] ^ i[3] ^ i[2];
+                c[5] = d[5] ^ d[4] ^ d[3] ^ i[5] ^ i[4] ^ i[3];
+                c[6] = d[6] ^ d[5] ^ d[4] ^ i[6] ^ i[5] ^ i[4];
+                c[7] = d[7] ^ d[6] ^ d[5] ^ i[7] ^ i[6] ^ i[5];
             endmodule
         "
         );
@@ -203,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_unroll_large() {
-        let lfsr = Lfsr::new(56, 8, 0x7);
+        let lfsr = Lfsr::new(56, 8, 0x7, false);
         let actual = lfsr.to_string();
         let expected = indoc!("
             module parallel_lfsr(

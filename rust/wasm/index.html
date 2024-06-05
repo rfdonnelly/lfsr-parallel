@@ -16,7 +16,7 @@
       }
 
       function populateFormFromQueryParams() {
-        var params = new URLSearchParams(location.search.slice(1));
+        const params = new URLSearchParams(location.search.slice(1));
         if (params.has("data-width")) {
           document.getElementById("data_width").value = params.get("data-width");
         }
@@ -25,6 +25,9 @@
         }
         if (params.has("polynomial")) {
           document.getElementById("polynomial").value = params.get("polynomial");
+        }
+        if (params.has("initial-state")) {
+          document.getElementById("initial_state").checked = params.get("initial-state") == "true";
         }
       }
 
@@ -35,14 +38,23 @@
       }
 
       window.generateOutput = function generateOutput() {
-        var data_width = document.getElementById("data_width").value;
-        var code_width = document.getElementById("code_width").value;
-        var polynomial = document.getElementById("polynomial").value;
-        window.history.replaceState({}, '', location.pathname + '?data-width=' + data_width + '&code-width=' + code_width + '&polynomial=' + polynomial);
-        var output = unroll_lfsr(parseInt(data_width), parseInt(code_width), BigInt(polynomial));
+        const data_width = document.getElementById("data_width").value;
+        const code_width = document.getElementById("code_width").value;
+        const polynomial = document.getElementById("polynomial").value;
+        const initial_state = document.getElementById("initial_state").checked;
+
+        const href = location.pathname
+          + '?data-width=' + data_width
+          + '&code-width=' + code_width
+          + '&polynomial=' + polynomial
+          + '&initial-state=' + initial_state;
+        window.history.replaceState({}, '', href);
+
+        const output = unroll_lfsr(parseInt(data_width), parseInt(code_width), BigInt(polynomial), initial_state);
         const outputElem = document.getElementById("output");
         outputElem.value = "// Generated with " + location.href + "\n" + output;
         outputElem.rows = outputElem.value.split("\n").length;
+
         document.getElementById("permalink").href = location.href;
       }
 
@@ -62,16 +74,20 @@
 
     <div>
       <div>
-        <label for="data_width">Data width:</label>
-        <input type="text" id="data_width" name="data_width" value="32">
+        <div><label for="data_width">Data width:</label></div>
+        <div><input type="text" id="data_width" name="data_width" value="16"></div>
       </div>
       <div>
-        <label for="code_width">Code width:</label>
-        <input type="text" id="code_width" name="code_width" value="8">
+        <div><label for="code_width">Code width:</label></div>
+        <div><input type="text" id="code_width" name="code_width" value="8"></div>
       </div>
       <div>
-        <label for="polynomial">Polynomial:</label>
-        <input type="text" id="polynomial" name="polynomial" value="0x07">
+        <div><label for="polynomial">Polynomial:</label></div>
+        <div><input type="text" id="polynomial" name="polynomial" value="0x07"></div>
+      </div>
+      <div>
+        <div><label for="initial_state">Initial state:</label></div>
+        <div><input type="checkbox" id="initial_state" name="initial_state" checked></div>
       </div>
     </div>
 
